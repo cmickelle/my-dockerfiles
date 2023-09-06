@@ -1,25 +1,22 @@
-# base
 FROM ubuntu:jammy
+ARG NODE_VERSION=20
+ADD http://archive.ubuntu.com/ubuntu/pool/main/c/curl/curl_7.81.0.orig.tar.gz /tmp/
 
-# python and jq
-RUN apt-get update && apt-get install -y \
-    python3.10 \
-    python3-pip \
-    jq \ 
-    unzip
+RUN apt update -y && apt-get install python3.10 python3-pip zip unzip gzip openssl libssl-dev gcc binutils jq make -y
+RUN cd /tmp/ && ls -la /tmp/ && tar -zxvf curl_7.81.0.orig.tar.gz && ls -la /tmp/curl*
+RUN cd /tmp/curl-7.81.0/ && ./configure --with-openssl --with-gnutls --with-wolfssl --disable-manual \
+    && make && make install
+    
+ENV LD_LIBRARY_PATH=/usr/local/lib
 
-# Azure installation command
-RUN	curl -L https://aka.ms/InstallAzureCLIDeb | bash
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
-# mulesoft and node 
-RUN curl -L https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs \
-    npm
-RUN npm install -g anypoint-cli-v4
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
+    apt-get install -y nodejs
+    
+#mulesoft
+RUN npm install -g anypoint-cli-v4 
 
-
-# Download Sonar Scanner
-RUN curl -L -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.9.1.69595.zip && \
-    unzip sonar-scanner.zip -d /opt/sonar-scanner && \
-    rm sonar-scanner.zip
+#sfdx
+RUN npm install @salesforce/cli --global 
 
